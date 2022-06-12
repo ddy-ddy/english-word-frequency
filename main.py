@@ -16,6 +16,7 @@ from string import punctuation
 import re
 import spacy
 import json
+import os
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -87,6 +88,7 @@ def get_split_context(file_path):
     with open(file_path, 'r', encoding="utf-8") as f:
         content = f.read()
         content = content.replace("\n", " ")  # 去除转行符
+        content = " ".join(content.split())  # 去除多于的空格
     f.close()
 
     # 拆分试卷
@@ -101,26 +103,37 @@ def get_split_context(file_path):
     return content_split_result
 
 
-if __name__ == '__main__':
+def main():
     # 得到考研所有的单词数据
     kaoyan_info, kaoyan_words = get_kaoyan_data()
     assert len(kaoyan_info) == len(kaoyan_words)
 
-    # 得到试卷的不同内容
-    split_content = get_split_context("examination_data/2006.txt")
+    files = os.listdir("examination_data")
+    for name in files:
+        try:
+            if name == ".DS_Store":
+                continue
 
-    for key in split_content:
-        useful_word = preprocess_content(split_content[key])  # 得到试卷上有用的单词
-        contained_words_info = []  # 包含的单词的信息
-        # 遍历有用的单词
-        for word in useful_word:
-            # 遍历所有的考研单词，看看有用的单词是否在里面，如果在里面则保存信息
-            for j, temp in enumerate(kaoyan_words):
-                if word in temp and kaoyan_info[j] not in contained_words_info:  # 保证去重
-                    contained_words_info.append(kaoyan_info[j])
-        split_content[key] = contained_words_info
+            # 得到试卷的不同内容
+            split_content = get_split_context("examination_data/" + name)
 
-    dump_dict_to_json_file("examination_use_words_data/2006.json", split_content)  # 保存数据
+            # 得到单词
+            for key in split_content:
+                useful_word = preprocess_content(split_content[key])  # 得到试卷上有用的单词
+                contained_words_info = []  # 包含的单词的信息
+                # 遍历有用的单词
+                for word in useful_word:
+                    # 遍历所有的考研单词，看看有用的单词是否在里面，如果在里面则保存信息
+                    for j, temp in enumerate(kaoyan_words):
+                        if word in temp and kaoyan_info[j] not in contained_words_info:  # 保证去重
+                            contained_words_info.append(kaoyan_info[j])
+                split_content[key] = contained_words_info
+            dump_dict_to_json_file("examination_use_words_data/" + name.replace(".txt", "") + ".json",
+                                   split_content)  # 保存数据
+        except Exception as e:
+            print(f"error file: {name}")
+            print(e)
 
 
-
+if __name__ == '__main__':
+    main()
