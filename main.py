@@ -17,6 +17,7 @@ import re
 import spacy
 import json
 import os
+from tqdm import tqdm
 
 nlp = spacy.load("en_core_web_lg")
 
@@ -48,8 +49,6 @@ def preprocess_content(content):
     # 去除自定义不使用的符号
     for token in no_use_token:
         preprocessed_data = preprocessed_data.replace(token, " ")
-    # 去除长度小于等于2的单词
-    preprocessed_data = " ".join([word for word in preprocessed_data.split() if len(word) > 2])
 
     # 使用spacy去除停用词，得到有用的单词
     useful_word = []
@@ -109,7 +108,7 @@ def main():
     assert len(kaoyan_info) == len(kaoyan_words)
 
     files = os.listdir("examination_data")
-    for name in files:
+    for name in tqdm(files):
         try:
             if name == ".DS_Store":
                 continue
@@ -135,5 +134,29 @@ def main():
             print(e)
 
 
+def my_test():
+    # 得到考研所有的单词数据
+    kaoyan_info, kaoyan_words = get_kaoyan_data()
+    assert len(kaoyan_info) == len(kaoyan_words)
+
+    # 得到试卷的不同内容
+    split_content = get_split_context("examination_data/2006.txt")
+
+    # 得到单词
+    for key in split_content:
+        useful_word = preprocess_content(split_content[key])  # 得到试卷上有用的单词
+        contained_words_info = []  # 包含的单词的信息
+        # 遍历有用的单词
+        for word in useful_word:
+            # 遍历所有的考研单词，看看有用的单词是否在里面，如果在里面则保存信息
+            for j, temp in enumerate(kaoyan_words):
+                if word in temp and kaoyan_info[j] not in contained_words_info:  # 保证去重
+                    contained_words_info.append(kaoyan_info[j])
+        split_content[key] = contained_words_info
+    dump_dict_to_json_file("examination_use_words_data/2006.json",
+                           split_content)  # 保存数据
+
+
 if __name__ == '__main__':
+    # my_test()
     main()

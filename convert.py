@@ -54,14 +54,14 @@ def get_kaoyan_data():
             if "sentence" in list(temp_info["content"]["word"]["content"].keys()):
                 temp_add_example = []
                 for item in temp_info["content"]["word"]["content"]["sentence"]["sentences"]:
-                    temp_add_example.append({"sentence": item["sContent"], "trnas": item["sCn"]})
+                    temp_add_example.append({"sentence": item["sContent"], "trans": item["sCn"]})
                 temp_add_info["example"] = temp_add_example
 
             # phrase
             if "phrase" in list(temp_info["content"]["word"]["content"].keys()):
                 temp_add_phrase = []
                 for item in temp_info["content"]["word"]["content"]["phrase"]["phrases"]:
-                    temp_add_phrase.append({"name": item["pContent"], "trnas": item["pCn"]})
+                    temp_add_phrase.append({"name": item["pContent"], "trans": item["pCn"]})
                 temp_add_info["phrase"] = temp_add_phrase
 
             # realWord and allWord
